@@ -3,30 +3,36 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.NumberFormat;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Objects;
 
 public class MonthlyReport {
-    public ArrayList<MonthData> allMonthData = new ArrayList<>();
-    public int amountOfMonth;//количество месяцев
-    public boolean monthlyReportWasRead = false;
+
+    public HashMap<Integer, ArrayList<Object>> allMonthReports = new HashMap<>();
+    ArrayList <Object> allDataInReport;
+    MonthReportRecord monthReportRecord;
+    public boolean monthlyReportWasRead = true;
 
     //Загрузка и чтение файла отчета:
     public void loadFile(int amountMonthlyReports) { //Загрузка информации из файлов отчетов
-        amountOfMonth=amountMonthlyReports;
-        System.out.println("Месячные отчеты успешно считаны.");
-        monthlyReportWasRead = true;
-        for (int i=1; i<=amountOfMonth; i++) {
-            String content = readFileContents("resources//m.20210" + i + ".csv");
-            String[] lines = content.split("\r?\n");
-            for (int k = 1; k < lines.length; k++) {
-                String[] line = lines[k].split(",");//item_name,is_expense,quantity,sum_of_one
-                int month =i;
-                String itemName=line[0];
-                boolean isExpense = Boolean.parseBoolean(line[1]);
-                int quantity = Integer.parseInt(line[2]);
-                int sumOfOne = Integer.parseInt(line[3]);
-                MonthData monthData = new MonthData(month,itemName, isExpense, quantity, sumOfOne);
-                allMonthData.add(monthData);
-               // System.out.println(monthData.itemName);
+        for (int month=1; month<=amountMonthlyReports; month++) {
+            allDataInReport = new ArrayList<>();
+            String content = readFileContents("resources//m.20210" + month + ".csv");
+            if (Objects.requireNonNull(content).isEmpty()) {
+                System.out.println("Проверьте файл");
+                monthlyReportWasRead = false;
+            } else {
+                String[] lines = content.split("\r?\n");
+                for (int k = 1; k < lines.length; k++) {
+                    String[] line = lines[k].split(",");//item_name,is_expense,quantity,sum_of_one
+                    String itemName = line[0];
+                    boolean isExpense = Boolean.parseBoolean(line[1]);
+                    int quantity = Integer.parseInt(line[2]);
+                    int sumOfOne = Integer.parseInt(line[3]);
+                    monthReportRecord = new MonthReportRecord(itemName, isExpense, quantity, sumOfOne);
+                    allDataInReport.add(monthReportRecord);
+                }
+                allMonthReports.put(month, allDataInReport);
             }
         }
     }
@@ -41,14 +47,16 @@ public class MonthlyReport {
     }
 
     //Поиск самого прибыльного товара (4.1)
-    private void searchProfitableProduct(int month){
+    public void searchProfitableProduct(int month){
         int profit=0;
         String productName="";
-        for (MonthData data : allMonthData) {
-            if(!data.isExpense&& data.month==month){
-                if(data.quantity*data.sumOfOne>profit){
-                    profit=data.quantity*data.sumOfOne;
-                    productName = data.itemName;
+        allDataInReport = allMonthReports.get(month);
+        for (Object data : allDataInReport) {
+            monthReportRecord = (MonthReportRecord) data;
+            if(!monthReportRecord.isExpense){
+                if(monthReportRecord.quantity*monthReportRecord.sumOfOne>profit){
+                    profit=monthReportRecord.quantity*monthReportRecord.sumOfOne;
+                    productName = monthReportRecord.itemName;
                 }
             }
         }
@@ -56,22 +64,50 @@ public class MonthlyReport {
     }
 
     //Поиск самой большой траты (4.2)
-    private void searchBigWaste(int month){
+    public void searchBigWaste(int month){
         int waste=0;
         String wasteName="";
-        for (MonthData data : allMonthData) {
-            if(data.isExpense&& data.month==month){
-                if(data.quantity*data.sumOfOne>waste){
-                    waste=data.quantity*data.sumOfOne;
-                    wasteName = data.itemName;
+        allDataInReport = allMonthReports.get(month);
+        for (Object data : allDataInReport) {
+            monthReportRecord = (MonthReportRecord) data;
+            if (monthReportRecord.isExpense) {
+                if (monthReportRecord.quantity * monthReportRecord.sumOfOne > waste) {
+                    waste = monthReportRecord.quantity * monthReportRecord.sumOfOne;
+                    wasteName = monthReportRecord.itemName;
                 }
             }
         }
         System.out.println("Самая большая трата: "+ wasteName+" - "+NumberFormat.getInstance().format(waste));
     }
 
+    //Прибыль по каждому месяцу:
+    public int profitByMonth (int month){
+        int profit=0;
+        allDataInReport = allMonthReports.get(month);
+        for (Object data : allDataInReport) {
+            monthReportRecord = (MonthReportRecord) data;
+            if (!monthReportRecord.isExpense) {
+                profit += monthReportRecord.quantity * monthReportRecord.sumOfOne;
+            }
+        }
+        return profit;
+    }
+
+    //Траты по каждому месяцу
+    public int wasteByMonth (int month){
+        int waste=0;
+        allDataInReport = allMonthReports.get(month);
+        for (Object data : allDataInReport) {
+            monthReportRecord = (MonthReportRecord) data;
+            if (monthReportRecord.isExpense) {
+                waste += monthReportRecord.quantity * monthReportRecord.sumOfOne;
+            }
+        }
+        return waste;
+    }
+
     //Печать отчета по месяцам:
-    public void printMonthlyInfo(){
+    public void monthlyInfo(int amountOfMonth){
         String[] monthName = {"январь", "февраль", "март", "апрель", "май", "июнь", "июль", "август", "сентябрь", "октябрь", "ноябрь", "декабрь"};
         if(monthlyReportWasRead){
             for (int i = 1; i <=amountOfMonth; i++) {

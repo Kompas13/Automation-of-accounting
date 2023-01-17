@@ -3,28 +3,33 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.NumberFormat;
 import java.util.ArrayList;
+import java.util.Objects;
 
 public class YearReport {
-    public ArrayList<YearData> allYearData = new ArrayList<>();
-    int reportYear;
-    public boolean YearReportWasRead = false;
+    public ArrayList<YearReportRecord> allYearData = new ArrayList<>();
+    public boolean yearReportWasRead = true;
 
     //Загрузка и чтение файла отчета:
-    public void loadFile(int year)  {
-        String content=readFileContents("resources/y."+year+".csv");
-        String[] lines = content.split("\r?\n");
-        reportYear=year;
-        System.out.println("Годовой отчет успешно считан.");
-        YearReportWasRead = true;
-        for (int i = 1; i < lines.length; i++) {
-            String[] line = lines[i].split(",");
-            int month = Integer.parseInt(line[0]);
-            int amount = Integer.parseInt(line[1]);
-            boolean isExpense = Boolean.parseBoolean(line[2]);
-            YearData yearData = new YearData(month, amount, isExpense);
-            allYearData.add(yearData);
+    public void loadFile(int year) {
+        String content = readFileContents("resources/y." + year + ".csv");
+        if (Objects.requireNonNull(content).isEmpty()) {
+            System.out.println("Проверьте файл");
+            yearReportWasRead = false;
+        } else {
+            String[] lines = content.split("\r?\n");
+
+            for (int i = 1; i < lines.length; i++) {
+                String[] line = lines[i].split(",");
+                int month = Integer.parseInt(line[0]);
+                int amount = Integer.parseInt(line[1]);
+                boolean isExpense = Boolean.parseBoolean(line[2]);
+                YearReportRecord yearReportRecord = new YearReportRecord(month, amount, isExpense);
+                allYearData.add(yearReportRecord);
+            }
         }
     }
+
+
 
     public String readFileContents(String path) {
         try {
@@ -36,9 +41,9 @@ public class YearReport {
     }
 
     //Прибыль по каждому месяцу (5.1):
-    int profitByMonth (int month){
+    int profitByMonthInYear (int month){
         int profit=0;
-        for (YearData data : allYearData) {
+        for (YearReportRecord data : allYearData) {
             if(!data.isExpense&&data.month==month){
                 profit+=data.amount;
             }
@@ -46,11 +51,22 @@ public class YearReport {
         return profit;
     }
 
+    //Траты за конкретный месяц
+    public int waistByMonthInYear(int month){
+        int waist=0;
+        for (YearReportRecord data : allYearData) {
+            if (data.isExpense&&data.month==month){
+                waist = data.amount;
+            }
+        }
+        return waist;
+    }
+
     //Средний расход за все месяцы (5.2):
-    int searchMiddleWasteInYear() {
+    public int searchMiddleWasteInYear() {
         int waste = 0;
 
-        for (YearData data : allYearData) {
+        for (YearReportRecord data : allYearData) {
             if (data.isExpense){
                 waste+= data.amount;
             }
@@ -59,10 +75,9 @@ public class YearReport {
     }
 
     //Средний доход за все месяцы (5.3):
-    int searchMiddleProfitInYear(){
+    public int searchMiddleProfitInYear(){
         int profit=0;
-
-        for (YearData data : allYearData) {
+        for (YearReportRecord data : allYearData) {
             if (!data.isExpense){
                 profit+= data.amount;
             }
@@ -71,14 +86,14 @@ public class YearReport {
     }
 
     //Печать годового отчета:
-    void printYearInfo() {
+    public void yearInfo(int reportYear) {
         String[] monthName = {"январь", "февраль", "март", "апрель", "май", "июнь", "июль", "август", "сентябрь", "октябрь", "ноябрь", "декабрь"};
         NumberFormat f = NumberFormat.getInstance();
-        if (YearReportWasRead) {
+        if (yearReportWasRead) {
             System.out.println("Информация по отчету за " + reportYear + " год:");
             for (int i = 0; i < allYearData.size(); i = i + 2) {
                 int month = allYearData.get(i).month;
-                System.out.println("Прибыль за " + monthName[month - 1] + " месяц составила - " + f.format(profitByMonth(month)));
+                System.out.println("Прибыль за " + monthName[month - 1] + " месяц составила - " + f.format(profitByMonthInYear(month)));
             }
             System.out.println("Средний расход за все месяцы " + reportYear + " года составил - " + f.format(searchMiddleWasteInYear()));
             System.out.println("Средний доход за все месяцы " + reportYear + " года составил - " + f.format(searchMiddleProfitInYear()));

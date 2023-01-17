@@ -3,27 +3,21 @@ import java.util.Scanner;
 public class Main {
 
     public static void main(String[] args) {
-        MonthlyReport monthlyReport= new MonthlyReport();
-        YearReport yearReport = new YearReport();
-        CompareReports compareReports = new CompareReports(monthlyReport, yearReport);
+        ReportsManages reportsManages = new ReportsManages();
         Scanner scanner = new Scanner(System.in);
-        int year =2021; //Год за который считывается годовой отчёт
-        int amountMonthlyReports=3; //Количество отчетных месяцев по которым есть отчеты
-
         while (true) {
             printMenu();
             int command = scanner.nextInt();
-
             if (command == 1) {
-                monthlyReport.loadFile(amountMonthlyReports);
+               reportsManages.loadMonthlyReports();
             } else if (command == 2) {
-                yearReport.loadFile(year);
+               reportsManages.loadYearReport();
             } else if (command == 3) {
-                compareReports.checkReadingReports();
+                reportsManages.checkReadingReports();
             } else if (command == 4) {
-                monthlyReport.printMonthlyInfo();
+                reportsManages.printMonthInfo();
             } else if (command == 5) {
-                yearReport.printYearInfo();
+                reportsManages.printYearInfo();
             } else if (command == 0) {
                 scanner.close();
                 System.out.println("Выход");
@@ -41,6 +35,6 @@ public class Main {
         System.out.println("3 - Сверить отчёты");
         System.out.println("4 - Вывести информацию о всех месячных отчётах");
         System.out.println("5 - Вывести информацию о годовом отчёте");
-      //System.out.println("0 - Выход"); //Команда работает, но по условию её в меню быть не должно.
+        System.out.println("0 - Выход");
     }
 }
