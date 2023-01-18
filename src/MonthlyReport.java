@@ -8,19 +8,22 @@ import java.util.Objects;
 
 public class MonthlyReport {
 
-    public HashMap<Integer, ArrayList<Object>> allMonthReports = new HashMap<>();
-    ArrayList <Object> allDataInReport;
+    public HashMap<Integer, ArrayList<MonthReportRecord>> allMonthReports = new HashMap<>();
     MonthReportRecord monthReportRecord;
-    public boolean monthlyReportWasRead = true;
+    public boolean monthlyReportWasRead = false;
 
     //Загрузка и чтение файла отчета:
     public void loadFile(int amountMonthlyReports) { //Загрузка информации из файлов отчетов
+        String content="";
         for (int month=1; month<=amountMonthlyReports; month++) {
-            allDataInReport = new ArrayList<>();
-            String content = readFileContents("resources//m.20210" + month + ".csv");
+            ArrayList <MonthReportRecord> allDataInReport = new ArrayList<>();
+            if (month<10){
+                content = readFileContents("resources//m.20210" + month + ".csv");
+            } else {
+                content = readFileContents("resources//m.2021" + month + ".csv");
+            }
             if (Objects.requireNonNull(content).isEmpty()) {
                 System.out.println("Проверьте файл");
-                monthlyReportWasRead = false;
             } else {
                 String[] lines = content.split("\r?\n");
                 for (int k = 1; k < lines.length; k++) {
@@ -30,9 +33,11 @@ public class MonthlyReport {
                     int quantity = Integer.parseInt(line[2]);
                     int sumOfOne = Integer.parseInt(line[3]);
                     monthReportRecord = new MonthReportRecord(itemName, isExpense, quantity, sumOfOne);
+
                     allDataInReport.add(monthReportRecord);
                 }
                 allMonthReports.put(month, allDataInReport);
+                monthlyReportWasRead = true;
             }
         }
     }
@@ -50,13 +55,13 @@ public class MonthlyReport {
     public void searchProfitableProduct(int month){
         int profit=0;
         String productName="";
-        allDataInReport = allMonthReports.get(month);
-        for (Object data : allDataInReport) {
-            monthReportRecord = (MonthReportRecord) data;
-            if(!monthReportRecord.isExpense){
-                if(monthReportRecord.quantity*monthReportRecord.sumOfOne>profit){
-                    profit=monthReportRecord.quantity*monthReportRecord.sumOfOne;
-                    productName = monthReportRecord.itemName;
+        ArrayList <MonthReportRecord> dataInReport;
+        dataInReport = allMonthReports.get(month);
+        for (MonthReportRecord data : dataInReport) {
+            if(!data.isExpense){
+                if(data.quantity*data.sumOfOne>profit){
+                    profit=data.quantity*data.sumOfOne;
+                    productName = data.itemName;
                 }
             }
         }
@@ -67,13 +72,13 @@ public class MonthlyReport {
     public void searchBigWaste(int month){
         int waste=0;
         String wasteName="";
-        allDataInReport = allMonthReports.get(month);
-        for (Object data : allDataInReport) {
-            monthReportRecord = (MonthReportRecord) data;
-            if (monthReportRecord.isExpense) {
-                if (monthReportRecord.quantity * monthReportRecord.sumOfOne > waste) {
-                    waste = monthReportRecord.quantity * monthReportRecord.sumOfOne;
-                    wasteName = monthReportRecord.itemName;
+        ArrayList <MonthReportRecord> dataInReport;
+        dataInReport = allMonthReports.get(month);
+        for (MonthReportRecord data : dataInReport) {
+            if(data.isExpense){
+                if(data.quantity*data.sumOfOne>waste){
+                    waste=data.quantity*data.sumOfOne;
+                    wasteName = data.itemName;
                 }
             }
         }
@@ -83,11 +88,11 @@ public class MonthlyReport {
     //Прибыль по каждому месяцу:
     public int profitByMonth (int month){
         int profit=0;
-        allDataInReport = allMonthReports.get(month);
-        for (Object data : allDataInReport) {
-            monthReportRecord = (MonthReportRecord) data;
-            if (!monthReportRecord.isExpense) {
-                profit += monthReportRecord.quantity * monthReportRecord.sumOfOne;
+        ArrayList <MonthReportRecord> dataInReport;
+        dataInReport = allMonthReports.get(month);
+        for (MonthReportRecord data : dataInReport) {
+            if (!data.isExpense) {
+                profit += data.quantity * data.sumOfOne;
             }
         }
         return profit;
@@ -96,11 +101,11 @@ public class MonthlyReport {
     //Траты по каждому месяцу
     public int wasteByMonth (int month){
         int waste=0;
-        allDataInReport = allMonthReports.get(month);
-        for (Object data : allDataInReport) {
-            monthReportRecord = (MonthReportRecord) data;
-            if (monthReportRecord.isExpense) {
-                waste += monthReportRecord.quantity * monthReportRecord.sumOfOne;
+        ArrayList <MonthReportRecord> dataInReport;
+        dataInReport = allMonthReports.get(month);
+        for (MonthReportRecord data : dataInReport) {
+            if (data.isExpense) {
+                waste += data.quantity * data.sumOfOne;
             }
         }
         return waste;

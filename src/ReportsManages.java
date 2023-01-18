@@ -7,16 +7,22 @@ public class ReportsManages {
 
     //Считываем годовой отчёт
     public void loadYearReport()  {
-        yearReport.loadFile(reportYear);
         if (yearReport.yearReportWasRead) {
+            System.out.println("Годовой отчет уже был считан.");
+        }
+        else {
+            yearReport.loadFile(reportYear);
             System.out.println("Годовой отчет успешно считан.");
         }
     }
 
     //Считываем месячные отчеты
     public void loadMonthlyReports(){
-        monthlyReport.loadFile(amountOfMonth);
         if (monthlyReport.monthlyReportWasRead) {
+            System.out.println("Месячные отчеты уже были считаны.");
+        }
+        else {
+            monthlyReport.loadFile(amountOfMonth);
             System.out.println("Месячные отчеты успешно считаны.");
         }
     }
@@ -44,17 +50,17 @@ public class ReportsManages {
 
     private void checkReports(){
         String[] monthName = {"январь", "февраль", "март", "апрель", "май", "июнь", "июль", "август", "сентябрь", "октябрь", "ноябрь", "декабрь"};
-        boolean hasDifferences=true; //Флаг сравнения отчетов
+        boolean hasDifferences=false; //Флаг сравнения отчетов
         for (int month = 1; month <= amountOfMonth; month++) {
             if(monthlyReport.profitByMonth(month)!=yearReport.profitByMonthInYear(month)){
-                hasDifferences=false;
+                hasDifferences=true;
                 System.out.println("Обнаружено несоответствие по прибыли годового отчета с отчетом за "+monthName[month-1]+" месяц.");
             }
             if (monthlyReport.wasteByMonth(month)!=yearReport.waistByMonthInYear(month)){
-                hasDifferences=false;
+                hasDifferences=true;
                 System.out.println("Обнаружено несоответствие по убыткам годового отчета с отчетом за "+monthName[month-1]+" месяц.");
             }
         }
-        System.out.println("Результат проверки - "+hasDifferences);
+        System.out.println("Результат проверки - "+!hasDifferences);
     }
 }
